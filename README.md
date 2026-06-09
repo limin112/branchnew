@@ -1,5 +1,7 @@
 # branchnew
 
+🌐 [English version ↓](#branchnew-english)
+
 > 🤖 **最省事的装法**:把这个仓库、或它的 URL `https://github.com/limin112/branchnew` 丢给 Claude Code,说一句「**帮我装 branchnew**」,它就会照着本 README 的 [安装](#安装) 步骤帮你装好(并会问你要不要 iTerm2 ⌘F 热键)。
 
 在**当前终端**向右劈一个窗格,并在那里把当前的 Claude Code 会话 **fork 一份继续**——于是你立刻得到一个上下文相同的「分身」,就贴在你正在工作的地方。你原来的窗格不动。
@@ -129,3 +131,138 @@ cd <你当前的目录> && claude --continue --fork-session --name <名字>
 ## License
 
 MIT — 见 [LICENSE](LICENSE)。
+
+---
+
+# branchnew (English)
+
+🌐 [中文版 ↑](#branchnew)
+
+> 🤖 **Easiest install**: hand this repo — or just its URL `https://github.com/limin112/branchnew` — to Claude Code and say *"install branchnew for me."* Claude follows the [Install](#install) steps below (and asks whether you want the iTerm2 ⌘F hotkey).
+
+Split the **current terminal** pane to the right and **fork-continue the current Claude Code session** there — instantly giving you a second view with the same context, right next to where you're working. Your original pane is untouched.
+
+In one line: `branchnew` = "fork this Claude session into a clone on the right."
+
+```
+┌────────────────┬────────────────┐
+│  the session   │  branchnew's   │
+│  you're in     │  fork clone    │
+│  (untouched)   │  newBranch[N]  │
+└────────────────┴────────────────┘
+```
+
+## Usage
+
+Just three forms:
+
+```bash
+branchnew            # split right + fork the current session, auto-named newBranch1 / newBranch2 / …
+branchnew <name>     # same, but name the new session <name> (verbatim, no number)
+branchnew --help     # show help
+```
+
+Examples:
+
+```bash
+branchnew                 # → newBranch3 (auto-numbered)
+branchnew login-fix       # → session named "login-fix"
+branchnew try other ideas # names may contain spaces — no quotes needed
+```
+
+> **Inside a Claude Code session**: just type **`/branchnew`** (or `/branchnew <name>`) to trigger the same fork — the slash command runs `branchnew` under the hood. `install.sh` installs it to `~/.claude/commands/`.
+
+## What it does
+
+- **Same context + branch off**: the new pane runs `claude --continue --fork-session`, resuming the most recent session in `$PWD` and **forking** it into an independent line — the two go their own ways, no interference.
+- **Auto-naming**: with no name, the new session is `newBranch1`, `newBranch2`, … (a global incrementing counter); pass a name and it uses yours. The name is set via `claude --name` and shows in the new session's **prompt box, `/resume` picker, and terminal title**.
+- **Changes no files or config**: it only opens a new terminal view running `claude` — purely a "window opener."
+
+## Supported terminals (auto-detected)
+
+Chosen automatically by priority, **no flags needed**; the action is always "split a pane to the right," falling back when a terminal can't:
+
+| Terminal | Behavior |
+|---|---|
+| **tmux** (inside any terminal) | `tmux split-window -h` — a real split to the right |
+| **iTerm2** | native `split vertically` to the right |
+| **Apple Terminal** (built-in) | no split panes → **opens a new window** (use tmux or iTerm2 for a real split) |
+| Others (Ghostty/Kitty/Warp/VS Code…) | can't be scripted → opens a new Apple Terminal window, with a notice |
+
+## Advanced: iTerm2 hotkey fork (⌘F)
+
+Besides the command line, there's an iTerm2 integration: **press a hotkey to fork the exact session live in the current pane** (precise to the session id, so fork-of-a-fork works too). It uses an iTerm2 background daemon + Claude hooks (the hooks call `branchnew --record` to record the pane ↔ session mapping). Install: `./install.sh --hotkey`. Full design & reproduce steps: **[HOTKEY-FORK.md](HOTKEY-FORK.md)**.
+
+## Install
+
+**One line** (`branchnew` command + `/branchnew` slash command, no clone needed):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/limin112/branchnew/main/install.sh | bash
+```
+
+To **also install the iTerm2 ⌘F hotkey fork** (auto-wires the Claude hooks for you):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/limin112/branchnew/main/install.sh | bash -s -- --hotkey
+```
+
+> The hotkey still needs two one-time manual steps: enable the Python API in iTerm2 settings, then restart iTerm2 and allow the script — see [HOTKEY-FORK.md](HOTKEY-FORK.md).
+
+After installing: type **`/branchnew`** in Claude Code, or run `branchnew --help` in a terminal. If `~/.local/bin` isn't on PATH, the installer adds it (takes effect in a new terminal).
+
+<details>
+<summary>Install from a clone / just the command itself</summary>
+
+```bash
+git clone https://github.com/limin112/branchnew.git && cd branchnew
+./install.sh            # base: branchnew + /branchnew
+./install.sh --hotkey   # also the iTerm2 hotkey daemon + auto-wired hooks
+```
+
+Just the `branchnew` command (manual):
+
+```bash
+mkdir -p ~/.local/bin
+curl -fsSL https://raw.githubusercontent.com/limin112/branchnew/main/branchnew -o ~/.local/bin/branchnew
+chmod +x ~/.local/bin/branchnew
+grep -q '.local/bin' ~/.zshrc || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+```
+</details>
+
+## Naming & numbering
+
+- **No name** → `newBranch<N>`. **N is a global incrementing counter** persisted in `~/.local/state/branchnew/counter` (respects `$XDG_STATE_HOME`), +1 on each auto-name, never reused. To start over, delete that file or write a starting value:
+  ```bash
+  echo 0 > ~/.local/state/branchnew/counter   # next will be newBranch1
+  ```
+- **With a name** → used verbatim, **no number, counter untouched**. Names may contain spaces/CJK (the script uses `$*`, no quotes needed).
+- **Preview without opening anything**: `BRANCHNEW_DRYRUN=1 branchnew [name]` just prints the command it would run (with the final name) and exits.
+
+## Requirements
+
+- **macOS** (built on AppleScript / tmux).
+- The **Claude Code** CLI installed, with `claude` on PATH.
+- Your terminal allowed to run AppleScript: the first run prompts for **Automation** permission → allow it (System Settings › Privacy & Security › Automation).
+
+## How it works
+
+`branchnew` detects `$TMUX` / `$TERM_PROGRAM` to pick a backend, and in the new pane/window runs:
+
+```bash
+cd <your current dir> && claude --continue --fork-session --name <name>
+```
+
+The script hardcodes no personal paths (only `$PWD`, `$@`), so it's safe to share as-is.
+
+## Troubleshooting
+
+| Symptom | Cause / fix |
+|---|---|
+| `could not open the new view` + an AppleScript error | Terminal lacks Automation permission. System Settings › Privacy & Security › Automation → allow your terminal to control iTerm/Terminal. |
+| Apple Terminal opens a new window instead of splitting | Expected — Terminal has no split panes. Use tmux or iTerm2 for a real split. |
+| `claude: command not found` in the new view | `claude` isn't on PATH in the new shell. Make sure Claude Code is installed. |
+
+## License
+
+MIT — see [LICENSE](LICENSE).
