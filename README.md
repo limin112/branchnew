@@ -49,7 +49,7 @@ branchnew 试一下别的方案    # 名字可带空格/中文,不用加引号
 | **Apple Terminal**(系统自带) | 不支持分屏 → **新开一个窗口**(想真分屏请用 tmux 或 iTerm2) |
 | 其它终端(Ghostty/Kitty/Warp/VS Code…) | 无法脚本控制 → 新开一个 Apple Terminal 窗口,并给出提示 |
 
-## 进阶:iTerm2 热键 fork(⌃⌥⌘F)
+## 进阶:iTerm2 热键 fork(⌘F)
 
 除了命令行,还有一个 iTerm2 集成:**按快捷键 fork 当前窗格里那条确切的会话**(精确到 session id,所以 fork-of-a-fork 也对)。它靠一个 iTerm2 后台守护 + Claude 钩子(钩子调用 `branchnew --record` 记录「窗格 ↔ 会话」映射)。安装:`./install.sh --hotkey`。完整原理与复现步骤见 **[HOTKEY-FORK.md](HOTKEY-FORK.md)**。
 
@@ -61,7 +61,7 @@ branchnew 试一下别的方案    # 名字可带空格/中文,不用加引号
 curl -fsSL https://raw.githubusercontent.com/limin112/branchnew/main/install.sh | bash
 ```
 
-想**连 iTerm2 ⌃⌥⌘F 热键 fork 一起装**(会自动帮你写好 Claude 钩子):
+想**连 iTerm2 ⌘F 热键 fork 一起装**(会自动帮你写好 Claude 钩子):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/limin112/branchnew/main/install.sh | bash -s -- --hotkey

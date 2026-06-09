@@ -2,7 +2,7 @@
 """
 claude_fork.py — iTerm2 AutoLaunch daemon.
 
-Press the hotkey (default: Control+Option+Command+F) in any iTerm pane that is
+Press the hotkey (default: Command+F) in any iTerm pane that is
 running a Claude Code session, and it splits the pane to the right and forks
 *that exact* session there:  claude --resume <id> --fork-session
 
@@ -23,7 +23,7 @@ LOG = os.path.expanduser("~/.local/state/branchnew/iterm-fork.log")
 
 # ---- Hotkey: edit these two lines to rebind ---------------------------------
 HOTKEY_KEYCODE = iterm2.Keycode.ANSI_F
-HOTKEY_MODS = {iterm2.Modifier.CONTROL, iterm2.Modifier.OPTION, iterm2.Modifier.COMMAND}
+HOTKEY_MODS = {iterm2.Modifier.COMMAND}
 # -----------------------------------------------------------------------------
 
 

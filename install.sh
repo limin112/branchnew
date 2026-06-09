@@ -9,7 +9,7 @@
 #   ./install.sh [--hotkey]
 #
 # Base install : the `branchnew` command + the `/branchnew` slash command.
-# --hotkey also: the iTerm2 ⌃⌥⌘F fork daemon, and it wires the Claude hooks for you.
+# --hotkey also: the iTerm2 ⌘F fork daemon, and it wires the Claude hooks for you.
 #
 set -euo pipefail
 
@@ -95,7 +95,7 @@ PY
   echo "Almost there — two one-time manual bits for the hotkey:"
   echo "  1. iTerm2 → Settings → General → Magic → enable \"Enable Python API\""
   echo "  2. Restart iTerm2 and click \"Allow\" when it asks about claude_fork.py"
-  echo "  Then open a Claude session and press ⌃⌥⌘F.   (details: HOTKEY-FORK.md)"
+  echo "  Then open a Claude session and press ⌘F.   (details: HOTKEY-FORK.md)"
 fi
 
 echo

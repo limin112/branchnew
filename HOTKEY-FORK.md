@@ -1,6 +1,6 @@
 # Claude 会话「热键 fork」——iTerm2 集成
 
-按一个快捷键(默认 **⌃⌥⌘F**),就把**当前 iTerm 窗格里正在跑的那条 Claude Code 会话**,在右边劈一个窗格 fork 出来。
+按一个快捷键(默认 **⌘F**),就把**当前 iTerm 窗格里正在跑的那条 Claude Code 会话**,在右边劈一个窗格 fork 出来。
 
 和 `branchnew` 命令的关键区别:它 fork 的是**这个窗格里这一条确切的会话**(精确到 session id,`claude --resume <id>`),而不是「`$PWD` 里最近的那个」——所以 **fork-of-a-fork(对分支再分支)也能对**。
 
@@ -12,7 +12,7 @@
 
 | | `branchnew`(命令) | 热键 fork(本文档) |
 |---|---|---|
-| 触发方式 | 终端里敲 `branchnew` | 按 **⌃⌥⌘F** |
+| 触发方式 | 终端里敲 `branchnew` | 按 **⌘F** |
 | fork 哪条会话 | `$PWD` 里**最近**的会话(`--continue`) | 当前窗格里**那一条确切**的会话(`--resume <id>`) |
 | 新会话命名 | `--name newBranch<N>`(自增编号) | `-n fork`(固定叫 `fork`) |
 | 依赖 | 无(纯 shell + AppleScript) | iTerm2 Python API + 后台守护脚本 + 会话映射表 |
@@ -26,10 +26,12 @@
 
 ```python
 HOTKEY_KEYCODE = iterm2.Keycode.ANSI_F
-HOTKEY_MODS = {iterm2.Modifier.CONTROL, iterm2.Modifier.OPTION, iterm2.Modifier.COMMAND}
+HOTKEY_MODS = {iterm2.Modifier.COMMAND}
 ```
 
 脚本用 iTerm2 的 `KeystrokeFilter` 把这个组合键「吞掉」(不让它到达 shell),再用 `KeystrokeMonitor` 监听它被按下。**想改键就改这两行**(例如换成 `ANSI_J`,或增删某个 Modifier),保存后重启 iTerm2。
+
+> ⚠️ 默认 **⌘F** 会被守护**全局拦截**,所以 iTerm2 自带的 **Find(⌘F 搜索)在所有面板都会失效**。不想丢 Find,就给 `HOTKEY_MODS` 加修饰键,例如 `{iterm2.Modifier.OPTION, iterm2.Modifier.COMMAND}`(⌥⌘F),重启 iTerm2。
 
 ---
 
@@ -53,7 +55,7 @@ HOTKEY_MODS = {iterm2.Modifier.CONTROL, iterm2.Modifier.OPTION, iterm2.Modifier.
   触发阶段(按下热键时)
   ┌────────────────────────────────────────────────────────────────┐
   │  iTerm2 AutoLaunch 守护:claude_fork.py                         │
-  │     按 ⌃⌥⌘F                                                     │
+  │     按 ⌘F                                                     │
   │     │  • 当前窗格 → session.session_id(= GUID)                 │
   │     │  • 读 ~/.local/state/branchnew/iterm/<GUID> → sid, cwd    │
   │     ▼                                                            │
@@ -70,7 +72,7 @@ HOTKEY_MODS = {iterm2.Modifier.CONTROL, iterm2.Modifier.OPTION, iterm2.Modifier.
 
 | 文件 / 位置 | 类型 | 作用 |
 |---|---|---|
-| `~/Library/Application Support/iTerm2/Scripts/AutoLaunch/claude_fork.py` | **新增** | 热键守护:监听 ⌃⌥⌘F,劈窗格 + fork 当前窗格的会话(仓库内副本:`iterm2/claude_fork.py`) |
+| `~/Library/Application Support/iTerm2/Scripts/AutoLaunch/claude_fork.py` | **新增** | 热键守护:监听 ⌘F,劈窗格 + fork 当前窗格的会话(仓库内副本:`iterm2/claude_fork.py`) |
 | `~/.local/bin/branchnew` 的 `--record` 分支 | **新增(合并)** | 钩子调用,写「窗格 GUID → 会话 id + cwd」映射;原 `branchnew-record` 已并入此处 |
 | `~/.claude/settings.json` 的 `hooks` | **修改** | `SessionStart` + `UserPromptSubmit` 各加一条 → `branchnew --record` |
 | iTerm2 设置 → Enable Python API | **手动开启** | AutoLaunch 脚本能运行的前提(`EnableAPIServer=1`) |
@@ -87,7 +89,7 @@ HOTKEY_MODS = {iterm2.Modifier.CONTROL, iterm2.Modifier.OPTION, iterm2.Modifier.
 ### 1. `iterm2/claude_fork.py` — 热键守护(iTerm2 AutoLaunch)
 
 - 放在 iTerm2 的 `Scripts/AutoLaunch/` 目录里,**iTerm2 启动时自动运行**,常驻后台。
-- `KeystrokeFilter([pattern])` 拦截 ⌃⌥⌘F(避免这串键打进 shell);`KeystrokeMonitor` 收到按键后,匹配 keycode + 修饰键,调用 `do_fork()`。
+- `KeystrokeFilter([pattern])` 拦截 ⌘F(避免这串键打进 shell);`KeystrokeMonitor` 收到按键后,匹配 keycode + 修饰键,调用 `do_fork()`。
 - `do_fork()`:取**当前窗口/标签/窗格**的 `session.session_id`(即 GUID)→ 读映射 → `async_split_pane(vertical=True)` 向右劈 → 在新窗格里 `async_send_text` 发:
   ```
   cd <cwd> && claude --resume <sid> --fork-session -n fork
@@ -159,7 +161,7 @@ curl -fsSL https://raw.githubusercontent.com/limin112/branchnew/main/install.sh 
 `--hotkey` 会:装好 `branchnew` + `/branchnew`、把 `claude_fork.py` 放进 iTerm2 AutoLaunch、**并自动把两条 `branchnew --record` 钩子写进 `~/.claude/settings.json`**(已存在则跳过,原文件备份为 `.bak`)。剩下两步一次性手动:
 
 1. **开启 iTerm2 Python API**:Settings → General → Magic → Enable Python API。
-2. **重启 iTerm2**(首次弹窗点「允许」),开一个 Claude 会话触发 `SessionStart` 写映射,然后在该窗格按 **⌃⌥⌘F**。
+2. **重启 iTerm2**(首次弹窗点「允许」),开一个 Claude 会话触发 `SessionStart` 写映射,然后在该窗格按 **⌘F**。
 
 > 从 clone 装也行:`git clone … && cd branchnew && ./install.sh --hotkey`。
 
